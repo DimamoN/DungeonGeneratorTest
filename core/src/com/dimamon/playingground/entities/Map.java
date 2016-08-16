@@ -15,21 +15,36 @@ public class Map {
     public int width;
     public int heigth;
     public Tile tiledMap[][];
+    public static Tile tiledMapStatic[][];
+
     private static final int TEX_SIZE = 16;
 
     //For map generator
     public static final int MIN_ROOMS = 3;
     public static final int MAX_ROOMS = 10;
+    int numberOfRooms;
+    int numberOfRoomsOrigin;
+    ArrayList<Room> rooms;
+
+    //Координаты для спавна героя
+    public int spawnX;
+    public int spawnY;
+
+    //Координаты выхода
+    public int exitX;
+    public int exitY;
 
     //Текстуры
     private Texture stoneTexture;
     private Texture stoneFloorTexture;
+    private Texture stairsDownTexture;
 
     //Пол
     private Floor stoneWall;
     private Floor stoneFloor;
 
     //Айтемы
+    private static Item stairsDown;
 
     //Cущества
 
@@ -43,12 +58,16 @@ public class Map {
         this.tiledMap = new Tile[width][heigth];
 
         //Текстуры
-        stoneTexture = new Texture("stone.png");
         stoneFloorTexture = new Texture("stoneFloor.png");
+        stoneTexture = new Texture("stone.png");
+        stairsDownTexture = new Texture("stairsDown.png");
 
         //Пол
         stoneFloor = new Floor(stoneFloorTexture,true);
         stoneWall = new Floor(stoneTexture,false);
+
+        //Айтемы
+        stairsDown = new Item(stairsDownTexture);
 
         //Тайлы
         stoneFloorTile = new Tile(stoneFloor);
@@ -67,41 +86,24 @@ public class Map {
                 tiledMap[i][j] = stoneWallTile;
 
 
-        //Сгенерировать ОДНУ КОМНАТУ! (ТЕСТ)
+        numberOfRooms = MathUtils.random(MIN_ROOMS, MAX_ROOMS);
+        numberOfRoomsOrigin = numberOfRooms;
+        rooms = new ArrayList<Room>(numberOfRooms);
 
-//        //Можно ли разместить комнату
-//        boolean isPlaced = false;
-//
-//        //Пока не разместили комнату, пробуем
-//        do{
-//
-//            //Создаем комнату в слуайном месте
-//            Room oneRoom = new Room(MathUtils.random(1,width - Room.MAX_ROOM_WIDTH),
-//                    MathUtils.random(1,heigth - Room.MAX_ROOM_HEIGHT));
-//
-//            for(int i = 0; i < width; i++)
-//                for(int j = 0; j < heigth; j++){
-//
-//                    if(oneRoom.isIn(i,j)){
-//                        tiledMap[i][j] = stoneFloorTile; //ВРЕМЕННО!
-//                    }
-//
-//                    isPlaced = true;
-//
-//                }
-//
-//        } while (!isPlaced);
-
+        boolean spawnFlag = true;
 
         //Этап 2 - генерация комнат
-
-        int numberOfRooms = MathUtils.random(MIN_ROOMS, MAX_ROOMS);
-        ArrayList<Room> rooms = new ArrayList<Room>(numberOfRooms);
-
         do{
             //Создаем комнату в слуайном месте
              Room room = new Room(MathUtils.random(1,width - Room.MAX_ROOM_WIDTH -1),
                 MathUtils.random(1,heigth - Room.MAX_ROOM_HEIGHT - 1));
+
+                //Установить координаты для спавна героя
+                if(spawnFlag) {
+                    spawnX = room.x + 1;
+                    spawnY = room.y + 1;
+                    spawnFlag = false;
+                }
 
              //Если комната не конфликтует с другими - добавить ее в лист
              if(!room.conflictes(rooms)) {
@@ -110,6 +112,7 @@ public class Map {
              }
 
          } while (numberOfRooms > 0);
+
 
          //Заполняем карту полом
          for(int i = 0; i < width; i++)
@@ -125,7 +128,6 @@ public class Map {
 
         //ДОРОГИ
 
-
         //Старторая точка = координата первой комнаты
         int startX = rooms.get(0).x;
         int startY = rooms.get(0).y;
@@ -134,8 +136,8 @@ public class Map {
         int currentY = startY;
         //Конечная точка = координата последней комнаты
         int nextRoom = 1;
-        int nextX = rooms.get(nextRoom).x;
-        int nextY = rooms.get(nextRoom).y;
+        int nextX = rooms.get(nextRoom).x + MathUtils.random(0,rooms.get(nextRoom).width);
+        int nextY = rooms.get(nextRoom).y + MathUtils.random(0,rooms.get(nextRoom).height);
 
         //Кол-во комнат
         int roomsCount = rooms.size();
@@ -159,8 +161,8 @@ public class Map {
                 if(rooms.get(nextRoom).isIn(currentX,currentY)){
                     //Если да, установить следующую комнату целью
                     if(nextRoom+1 < maxRoomNumber) nextRoom++;
-                    nextX = rooms.get(nextRoom).x;
-                    nextY = rooms.get(nextRoom).y;
+                    nextX = rooms.get(nextRoom).x + MathUtils.random(0,rooms.get(nextRoom).width);
+                    nextY = rooms.get(nextRoom).y + MathUtils.random(0,rooms.get(nextRoom).height);
                     roomsCount--;
                 }
                 //Если не находимся -> продолжить движение к ней по вертикали
@@ -178,8 +180,8 @@ public class Map {
                     //Если пришли
                     else{
                         if(nextRoom+1 < maxRoomNumber) nextRoom++;
-                        nextX = rooms.get(nextRoom).x;
-                        nextY = rooms.get(nextRoom).y;
+                        nextX = rooms.get(nextRoom).x + MathUtils.random(0,rooms.get(nextRoom).width);
+                        nextY = rooms.get(nextRoom).y + MathUtils.random(0,rooms.get(nextRoom).height);
                         roomsCount--;
                     }
                 }
@@ -188,6 +190,27 @@ public class Map {
         } while (roomsCount > 0);
 
 
+        //Установить координаты для выхода (и установить его)
+        tiledMap[rooms.get(numberOfRoomsOrigin-1).x][rooms.get(numberOfRoomsOrigin-1).y] = new Tile(stoneFloor,stairsDown);
+
+        tiledMapStatic = tiledMap;
+
+    }
+
+    //Есть ли в данной клетке комната? to do?
+    private boolean isRoomInThisPos(int x, int y){
+        return false;
+    }
+
+    public static boolean isStairs(int x, int y){
+        if(tiledMapStatic[x][y].getItem() == stairsDown) return true;
+        else return false;
+    }
+
+    //Может ли существо передвинуться в позицию x, y на карте
+    public static boolean canMove(int x, int y){
+        if(tiledMapStatic[x][y].getCanMove()) return true;
+        else return false;
     }
 
     //Отрисовка tiledMap

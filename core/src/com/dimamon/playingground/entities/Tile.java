@@ -18,10 +18,19 @@ public class Tile {
         this.floor = floor;
     }
 
+    public Tile(Floor floor, Item item) {
+        this.floor = floor;
+        this.item = item;
+    }
+
     public Tile(Floor floor, Item item, Creature creature) {
         this.floor = floor;
         this.item = item;
         this.creature = creature;
+    }
+
+    public boolean getCanMove(){
+        return floor.isCanMove();
     }
 
     //Отрисовка тайла в строгом порядке 1)Земля 2)Айтемы 3)Существа
@@ -33,4 +42,11 @@ public class Tile {
         creature.render(batch,x,y);
     }
 
+    public Item getItem() {
+        return item;
+    }
+
+    public void setItem(Item item) {
+        this.item = item;
+    }
 }
