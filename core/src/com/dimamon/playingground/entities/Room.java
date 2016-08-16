@@ -64,20 +64,20 @@ public class Room {
                 (room.y > this.y) && (room.y < (this.y + height))) return true;
 
         //Left
-        if((x >= room.x) && (x <= (room.x + room.width))){
+        if((x >= room.x) && (x <= (room.x + room.width+1))){
             //Bot
-            if((y >= room.y) && (y <= (room.y + room.height))) return true;
+            if((y >= room.y) && (y <= (room.y + room.height+1))) return true;
 
             //Top
-            if((y+height >= room.y) && ((y+height) <= (room.y + room.height))) return true;
+            if((y+height >= room.y) && ((y+height) <= (room.y + room.height+1))) return true;
         }
 
         //Right
-        if(((x+width) >= room.x) && ((x+width) <= (room.x + room.width))){
+        if(((x+width) >= room.x) && ((x+width) <= (room.x + room.width+1))){
             //Bot
-            if((y >= room.y) && (y <= (room.y + room.height))) return true;
+            if((y >= room.y) && (y <= (room.y + room.height+1))) return true;
             //Top
-            if(((y+height) >= room.y) && ((y+height) <= (room.y + room.height))) return true;
+            if(((y+height) >= room.y) && ((y+height) <= (room.y + room.height+1))) return true;
         }
 
         return false;
